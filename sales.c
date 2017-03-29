@@ -42,7 +42,7 @@ int get_ID_Input(int a){
 }
 
 void menu_update(void){
-    struct customer c;
+    struct customer c = {};
 	float f = 0.00;
 	int i = 0;
 	while (1) {
@@ -80,6 +80,12 @@ void menu_update(void){
 				printf("Sales Person: ");
 				scanf("%s",c.sales_Person);
 	            break;
+            case 8:
+                
+                break;
+            case 9:
+                struct customer c = {};
+                break;
 	        case 10:
 	            exit(0);
 	        default:
