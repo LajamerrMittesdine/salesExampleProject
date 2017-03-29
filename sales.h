@@ -1,4 +1,4 @@
-#define NAME_LEN_MAX 512
+#define NAME_LEN_MAX 128
 #define CARD_NUM_LEN_MAX 16
 
 struct customer {
@@ -10,7 +10,7 @@ struct customer {
     int card_Expiration_Year;
     char sales_Person[NAME_LEN_MAX + 1];
 };
-
+const static struct customer empty_customer = {{0},{0},0,{0},0,0,{0}};
 void menu(struct customer *cp);
 void cls(void);
 int get_ID_Input(int a);
