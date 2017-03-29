@@ -84,7 +84,7 @@ void menu_update(void){
                 
                 break;
             case 9:
-                struct customer c = {};
+                struct customer c = (struct customer){0};
                 break;
 	    case 10:
 	        exit(0);
