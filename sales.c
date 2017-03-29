@@ -42,7 +42,7 @@ int get_ID_Input(int a){
 }
 
 void menu_update(void){
-    struct customer c = {};
+    struct customer c = empty_customer;
 	float f = 0.00;
 	int i = 0;
 	while (1) {
@@ -84,7 +84,7 @@ void menu_update(void){
                 
                 break;
             case 9:
-                c = (struct customer){};
+                c = empty_customer;
                 break;
 	        case 10:
 	            exit(0);
