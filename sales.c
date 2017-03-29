@@ -46,51 +46,51 @@ void menu_update(void){
 	float f = 0.00;
 	int i = 0;
 	while (1) {
-	    cls();
-	    menu(&c);
-	    switch(get_ID_Input(0)){
-	        case 1:
-				printf("Customer First Name: ");
-				scanf("%s",c.first_Name);
-	            break;
-	        case 2:
-				printf("Customer Last Name: ");
-				scanf("%s",c.last_Name);
-	            break;
-	        case 3:
-				printf("Customer Amount: ");
-				scanf("%f",&f);
-				c.amount = f;
-	            break;
-	        case 4:
-				printf("Customer Card Number: ");
-				scanf("%s",c.card_Number);
-	            break;        
-	        case 5:
-				printf("Customer Card Expiration Month: ");
-				scanf("%i",&i);
-				c.card_Expiration_Month = i;
-	            break;
-	        case 6:
-				printf("Customer Card Expiration Year: ");
-				scanf("%i",&i);
-				c.card_Expiration_Year = i;
-	            break;
-	        case 7:
-				printf("Sales Person: ");
-				scanf("%s",c.sales_Person);
-	            break;
+	cls();
+	menu(&c);
+	switch(get_ID_Input(0)){
+	    case 1:
+		printf("Customer First Name: ");
+		scanf("%s",c.first_Name);
+	        break;
+	    case 2:
+		printf("Customer Last Name: ");
+		scanf("%s",c.last_Name);
+	        break;
+	    case 3:
+		printf("Customer Amount: ");
+		scanf("%f",&f);
+		c.amount = f;
+	        break;
+	    case 4:
+		printf("Customer Card Number: ");
+		scanf("%s",c.card_Number);
+	        break;        
+	    case 5:
+		printf("Customer Card Expiration Month: ");
+		scanf("%i",&i);
+		c.card_Expiration_Month = i;
+	        break;
+	    case 6:
+		printf("Customer Card Expiration Year: ");
+		scanf("%i",&i);
+		c.card_Expiration_Year = i;
+	        break;
+	    case 7:
+		printf("Sales Person: ");
+		scanf("%s",c.sales_Person);
+	        break;
             case 8:
                 
                 break;
             case 9:
                 struct customer c = {};
                 break;
-	        case 10:
-	            exit(0);
-	        default:
-	            printf("Incorrect action ID!\n");
-	            break;
+	    case 10:
+	        exit(0);
+	    default:
+	        printf("Incorrect action ID!\n");
+	        break;
 	    }    
 	}
 }
