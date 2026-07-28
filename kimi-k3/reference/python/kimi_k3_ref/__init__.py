@@ -15,6 +15,7 @@ from .attn_res import apply_attn_res
 from .short_conv import short_conv1d_silu
 from .kda_gate import kda_lowerbound_gate
 from .kda_recurrent import kda_recurrent, l2_normalize
+from .kda_chunk import kda_chunk
 from .mla_eager import mla_eager_attention, gated_mla_output
 from .decoder_block import decoder_block_forward
 
@@ -28,6 +29,7 @@ __all__ = [
     "short_conv1d_silu",
     "kda_lowerbound_gate",
     "kda_recurrent",
+    "kda_chunk",
     "l2_normalize",
     "mla_eager_attention",
     "gated_mla_output",
