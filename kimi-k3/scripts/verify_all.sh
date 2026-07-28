@@ -5,7 +5,7 @@ cd "$ROOT"
 
 echo "== Python reference =="
 python3 scripts/generate_goldens.py >/dev/null
-python3 -m pytest -q reference/python/tests/test_goldens.py
+python3 -m pytest -q reference/python/tests
 
 echo "== Rust =="
 (cd rust && cargo test --quiet)

@@ -8,7 +8,7 @@
 | KDA lower-bound gate | §2.1.1 | FLA `naive_kda_lowerbound_gate`; used via `chunk_kda(..., safe_gate=True, lower_bound=-5)` | `kda_gate.py` | `kda_gate.*` |
 | Short conv + SiLU | §2.1.1 | FLA `ShortConvolution` in `KimiDeltaAttention` | `short_conv.py` | `short_conv.*` |
 | Q/K L2Norm | §2.1.1 | `use_qk_l2norm_in_kernel=True` | `l2_normalize` in `kda_recurrent.py` | same |
-| Chunk / Flash KDA | §2.1.1 / infra | `fla.ops.kda.chunk_kda`, FlashKDA `flash_kda.fwd` | docs only (`NUMERICS`, `INFRA`) | — |
+| Chunk / Flash KDA | §2.1.1 / infra | `fla.ops.kda.chunk_kda`, FlashKDA `flash_kda.fwd` | `kda_chunk.py` (numpy; ports use recurrent) | — |
 | Gated MLA | §2.1.2 | `KimiMLAAttention` | `mla_eager.py` | `mla_eager.*` |
 | MLA output gate | §2.1.2 | `g_proj` + sigmoid | `gated_mla_output` | same |
 | AttnRes apply | §2.2 | `_apply_attn_res` | `attn_res.py` | `attn_res.*` |
