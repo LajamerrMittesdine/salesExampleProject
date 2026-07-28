@@ -31,3 +31,22 @@
 # Debug files
 *.dSYM/
 *.su
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# Rust
+kimi-k3/rust/target/
+
+# C/C++
+kimi-k3/c/*.o
+kimi-k3/c/test_goldens
+kimi-k3/cpp/build/
+kimi-k3/cpp/test_goldens
+
+# Go
+kimi-k3/go/ref/ref.test

@@ -1,0 +1,13 @@
+[package]
+name = "kimi-k3-ref"
+version = "0.1.0"
+edition = "2021"
+description = "Idiomatic float32 educational port of Kimi K3 core algorithms"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
