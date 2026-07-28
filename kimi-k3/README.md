@@ -17,10 +17,11 @@ bash kimi-k3/scripts/verify_all.sh
 
 1. Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 2. Use [`docs/SOURCE_MAP.md`](docs/SOURCE_MAP.md) to jump from equations → official symbols → ports
-3. Read official backbone: [`official/python/modeling_kimi_linear.py`](official/python/modeling_kimi_linear.py)
-4. Read multimodal wrapper: [`official/python/modeling_kimi_k3.py`](official/python/modeling_kimi_k3.py)
-5. Compare with educational core: [`reference/python/kimi_k3_ref/`](reference/python/kimi_k3_ref/)
-6. Pick a language: [`c/`](c/), [`cpp/`](cpp/), [`rust/`](rust/), [`go/`](go/)
+3. Read [`docs/CODE_WALKTHROUGH.md`](docs/CODE_WALKTHROUGH.md) for cache, XTML chat, vision merge, FlashKDA, MoonEP
+4. Read official backbone: [`official/python/modeling_kimi_linear.py`](official/python/modeling_kimi_linear.py)
+5. Read multimodal wrapper: [`official/python/modeling_kimi_k3.py`](official/python/modeling_kimi_k3.py)
+6. Compare with educational core: [`reference/python/kimi_k3_ref/`](reference/python/kimi_k3_ref/)
+7. Pick a language: [`c/`](c/), [`cpp/`](cpp/), [`rust/`](rust/), [`go/`](go/)
 
 ## Layout
 

@@ -8,6 +8,8 @@
 - API: `flash_kda.fwd(q,k,v,g,beta,scale,out,A_log,dt_bias,lower_bound,...)`
 - Requires head dim K=V=128 (matches K3)
 - Opt out: `FLA_FLASH_KDA=0`
+- Call chain in K3 HF code: `KimiDeltaAttention.forward` → `fla.ops.kda.chunk_kda` (prefill) or `fused_recurrent_kda` (decode) → optional FlashKDA backend
+- Deeper reading: `docs/CODE_WALKTHROUGH.md` §5
 
 Educational ports intentionally implement the **naive recurrence**, not the CUTLASS path.
 

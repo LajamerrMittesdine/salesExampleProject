@@ -17,7 +17,10 @@
 | Expert FFN | §2.3 | `KimiBlockSparseMLP` | `expert_ffn.py` | `expert_ffn.*` |
 | LatentMoE | §2.3 | `KimiSparseMoeBlock` | `latent_moe_forward` | same |
 | Shared experts | §2.3 | `KimiMLP` as `shared_experts` | inside `latent_moe_forward` | same |
-| Dynamic cache | decode | `KimiDynamicCache` | documented | — |
+| Dynamic cache | decode | `KimiDynamicCache` | `docs/CODE_WALKTHROUGH.md` §2 | — |
+| XTML chat/tools | product | `encoding_k3.py` | `docs/CODE_WALKTHROUGH.md` §3 | — |
+| Image merge | §2.4 | `_merge_input_ids_with_image_features` | `docs/CODE_WALKTHROUGH.md` §4 | — |
+| FlashKDA dispatch | infra | FLA `chunk_kda` → `flash_kda.fwd` | `docs/CODE_WALKTHROUGH.md` §5 | — |
 | Backbone loop | §2 | `KimiLinearModel.forward` | — | — |
 | Multimodal merge | §2.4 | `KimiK3ForConditionalGeneration` | official only | — |
 | MoonViT-V2 | §2.4 | classes in `modeling_kimi_k3.py` | official only | — |
