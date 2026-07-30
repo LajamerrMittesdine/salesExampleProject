@@ -1,0 +1,6 @@
+{"log":
+ [{"message":
+   ".> LEAN_PATH=././.lake/build/lib LD_LIBRARY_PATH= /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.16.0/bin/lean ././././EvenPrime/Tests.lean -R ./././. -o ././.lake/build/lib/EvenPrime/Tests.olean -i ././.lake/build/lib/EvenPrime/Tests.ilean -c ././.lake/build/ir/EvenPrime/Tests.c --json",
+   "level": "trace"},
+  {"message": "././././EvenPrime/Tests.lean:34:0: none", "level": "info"}],
+ "depHash": "13264496844471335184"}

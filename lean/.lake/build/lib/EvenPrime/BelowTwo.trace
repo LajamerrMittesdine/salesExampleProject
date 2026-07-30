@@ -1,0 +1,8 @@
+{"log":
+ [{"message":
+   ".> LEAN_PATH=././.lake/build/lib LD_LIBRARY_PATH= /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.16.0/bin/lean ././././EvenPrime/BelowTwo.lean -R ./././. -o ././.lake/build/lib/EvenPrime/BelowTwo.olean -i ././.lake/build/lib/EvenPrime/BelowTwo.ilean -c ././.lake/build/ir/EvenPrime/BelowTwo.c --json",
+   "level": "trace"},
+  {"message":
+   "././././EvenPrime/BelowTwo.lean:34:0: no_even_prime_lt_two : NoEvenPrimeBelowTwo",
+   "level": "info"}],
+ "depHash": "9958447594439447785"}
