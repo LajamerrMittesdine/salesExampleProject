@@ -34,14 +34,12 @@
 \newtheorem{notation}[theorem]{Notation}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{example}[theorem]{Example}
+
 \theoremstyle{remark}
 \newtheorem*{convention}{Convention}
 
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Suc}{\mathrm{S}}
-\newcommand{\IsPrime}{\mathrm{Prime}}
-\newcommand{\IsComp}{\mathrm{Composite}}
-\newcommand{\IsEven}{\mathrm{Even}}
 \newcommand{\eqdef}{\stackrel{\mathrm{def}}{=}}
 
 \crefname{axiom}{Axiom}{Axioms}
@@ -51,34 +49,34 @@
 \begin{document}
 
 \title[On the Uniqueness of the Even Prime]
-{On the Uniqueness of the Even Prime:\\
-A Self-Contained Development from the Peano Axioms}
+{On the Uniqueness of the Even Prime}
 
 \author{}
 \address{}
-\date{\today}
+\date{Version 3, \today}
 
 \begin{abstract}
-We give a self-contained proof that \(2\) is the unique even prime
-natural number. Working in informal classical set theory with a
-Dedekind--Peano structure \((\N,0,\Suc)\), we prove a recursion theorem
-(without presupposing the order relation), construct addition and
-multiplication, develop order and divisibility, and define primes,
-composites, and even numbers. After verifying that \(2\) itself is an
-even prime, we prove two complementary statements: no natural number
-strictly less than \(2\) is prime, and every even natural number
-strictly greater than \(2\) is composite. The second of these is proved
-in two genuinely different ways---by the divisor clause in the
-definition of primality, and by exhibiting a proper factorization.
-Combining these facts yields uniqueness. A companion \textsc{Lean}~4
-development checks the uniqueness layer on the built-in type
-\texttt{Nat}; we record precisely what is and is not machine-checked.
+We prove that \(2\) is the unique even prime natural number, in a
+development that begins from the Dedekind--Peano axioms and constructs
+the arithmetic and order needed along the way. Recursion is established
+before the order relation is defined. Addition and multiplication are
+constructed, and every identity later required---including additive
+cancellation, the impossibility of a nonzero summand yielding zero, and
+the fact that the only unit is \(1\)---is proved explicitly. After
+defining primes, composites, and even numbers, we show that nothing
+strictly less than \(2\) is prime and that every even natural number
+strictly greater than \(2\) is composite. The latter is proved in two
+arithmetically distinct ways: by the divisor clause in the definition of
+primality, and by exhibiting a proper factorization. A companion
+\textsc{Lean}~4 development checks the uniqueness layer on the kernel
+type \texttt{Nat}; we record the precise trust boundary between that
+artifact and the Peano narrative.
 \end{abstract}
 
-\subjclass[2020]{Primary 11A41, 03B30; Secondary 00A35, 11A51}
+\subjclass[2020]{Primary 11A41, 03B30; Secondary 00A35}
 
-\keywords{Prime number, even integer, Peano axioms, divisibility,
-well-ordering, elementary number theory}
+\keywords{Prime number, even integer, Peano axioms, recursion theorem,
+divisibility, elementary number theory}
 
 \maketitle
 
@@ -86,79 +84,66 @@ well-ordering, elementary number theory}
 \section{Introduction}
 \label{sec:intro}
 
-\begin{theorem}[Target]
-\label{thm:target-preview}
-If \(p\in\N\) is prime and even, then \(p=2\). Equivalently: \(2\) is
-the unique even prime natural number.
+\begin{theorem}[Main theorem]
+\label{thm:main}
+Every even prime natural number equals \(2\). Moreover \(2\) itself is
+an even prime, so \(2\) is the unique even prime.
 \end{theorem}
 
-This classical fact is elementary, but a fully explicit account must
-say what a natural number is, construct arithmetic, define
-divisibility and primality, and justify every intermediate step. The
-present note supplies such an account, in the spirit of Landau's
-\emph{Foundations of Analysis}~\cite{Landau1951}, while remaining short
-enough to be read as a single argument.
+The first sentence is a uniqueness-only claim; the second adds the
+witness that \(2\) is an even prime. Both are proved below. Neither is
+deep, but a fully explicit account must specify what a natural number
+is, construct arithmetic, and justify every intermediate step. That is
+the purpose of this note.
 
-Two design choices distinguish the note. First, we take care with the
-ambient framework: induction is stated for arbitrary subsets of
-\(\N\), and recursion is proved before order is defined, so that the
+We follow the classical programme of Landau's \emph{Foundations of
+Analysis}~\cite{Landau1951}, with three design choices of our own.
+First, recursion is proved before order is introduced, so that the
 construction of addition does not depend on a relation that itself
-depends on addition. Second, we carefully separate two \emph{arithmetically
-distinct} proofs that every even \(n>2\) is composite from mere
-presentational variants of the same inference.
+depends on addition. Second, we carefully separate two genuinely
+different proofs that every even \(n>2\) is composite from mere
+presentational variants of a single inference. Third, a companion
+formalization in \textsc{Lean}~4 checks the uniqueness layer on
+\texttt{Nat}; \Cref{sec:lean} states exactly what is and is not
+machine-checked.
 
-A companion formalization in \textsc{Lean}~4 (stdlib only) checks the
-uniqueness theorem, the two primary proofs, definitional audits, and
-specification certificates on the kernel type \texttt{Nat}. It does
-\emph{not} reconstruct \(\N\) from Peano axioms inside the prover; see
-\Cref{sec:lean}.
+The development occupies~\Cref{sec:peano,sec:arith,sec:order,sec:div}.
+Primes and the uniqueness argument occupy~\Cref{sec:prime,sec:unique}.
 
 % =====================================================================
 \section{Ambient framework and the Peano axioms}
 \label{sec:peano}
 
 \begin{convention}
-We work in informal classical set theory. In particular we allow
-formation of subsets of \(\N\), functions \(\N\to\N\), and finite
-sequences in \(\N\). Induction will be stated for arbitrary subsets
-(Dedekind's form), not as a first-order schema. Classical logic
-(including proof by contradiction) is used freely.
+We work in informal classical set theory. We allow formation of
+subsets of \(\N\), functions \(\N\to\N\), and subsets of
+\(\N\times\N\). Induction is stated for arbitrary subsets (Dedekind's
+form). Classical logic is used freely.
 \end{convention}
 
 \begin{definition}[Natural numbers]
 \label{def:N}
 We postulate a set \(\N\), a distinguished element \(0\in\N\), and a
-function \(\Suc\colon\N\to\N\) (the \emph{successor}), subject to the
-axioms below. Elements of \(\N\) are called \emph{natural numbers}.
+function \(\Suc\colon\N\to\N\), subject to the axioms below.
 \end{definition}
 
-\begin{axiom}[Zero is not a successor]
+\begin{axiom}
 \label{ax:peano1}
 For every \(n\in\N\), \(\Suc(n)\neq 0\).
 \end{axiom}
 
-\begin{axiom}[Injectivity of successor]
+\begin{axiom}
 \label{ax:peano2}
 For all \(m,n\in\N\), if \(\Suc(m)=\Suc(n)\), then \(m=n\).
 \end{axiom}
 
 \begin{axiom}[Induction]
 \label{ax:peano3}
-Let \(A\subseteq\N\). Suppose \(0\in A\), and suppose that
-\(n\in A\) implies \(\Suc(n)\in A\) for every \(n\in\N\). Then
-\(A=\N\).
+Let \(A\subseteq\N\). If \(0\in A\) and \(n\in A\Rightarrow\Suc(n)\in A\)
+for every \(n\), then \(A=\N\).
 \end{axiom}
 
-\begin{remark}
-\label{rem:property}
-When we say ``let \(P\) be a property of natural numbers'' we mean that
-\(A=\{n\in\N:P(n)\}\) is a subset of \(\N\) to which
-\Cref{ax:peano3} applies. This is the only comprehension principle we
-use without further comment.
-\end{remark}
-
 \begin{notation}
-\label{not:numerals}
 Set \(1\eqdef\Suc(0)\), \(2\eqdef\Suc(1)\), \(3\eqdef\Suc(2)\), and
 \(4\eqdef\Suc(3)\).
 \end{notation}
@@ -169,20 +154,19 @@ One has \(0\neq 1\) and \(1\neq 2\).
 \end{lemma}
 
 \begin{proof}
-If \(0=1=\Suc(0)\), then \(\Suc(0)=0\), contradicting
-\Cref{ax:peano1}. If \(1=2\), then \(\Suc(0)=\Suc(1)\), so \(0=1\)
-by~\Cref{ax:peano2}.
+If \(0=1=\Suc(0)\), contradict~\Cref{ax:peano1}. If \(1=2\), then
+\(\Suc(0)=\Suc(1)\), so \(0=1\) by~\Cref{ax:peano2}.
 \end{proof}
 
 \begin{lemma}[Predecessor]
 \label{lem:pred}
-For every \(n\in\N\), either \(n=0\) or there is a unique \(m\in\N\)
-with \(n=\Suc(m)\).
+For every \(n\in\N\), either \(n=0\) or there is a unique \(m\) with
+\(n=\Suc(m)\).
 \end{lemma}
 
 \begin{proof}
-Let \(A\) be the set of \(n\) satisfying the claim. Then \(0\in A\).
-If \(n\in A\), then \(\Suc(n)\in A\) by taking \(m=n\).
+Let \(A\) be the set of \(n\) satisfying the claim. Then \(0\in A\),
+and if \(n\in A\) then \(\Suc(n)\in A\) by taking \(m=n\).
 By~\Cref{ax:peano3}, \(A=\N\). Uniqueness is~\Cref{ax:peano2}.
 \end{proof}
 
@@ -190,193 +174,318 @@ By~\Cref{ax:peano3}, \(A=\N\). Uniqueness is~\Cref{ax:peano2}.
 \section{Recursion, addition, and multiplication}
 \label{sec:arith}
 
-We prove recursion without mentioning the order relation \(\le\).
-
 \begin{lemma}[Recursion]
 \label{lem:recursion}
-Let \(a\in\N\) and let \(f\colon\N\to\N\). There exists a unique
-function \(u\colon\N\to\N\) such that
+Let \(a\in\N\) and \(f\colon\N\to\N\). There exists a unique
+\(u\colon\N\to\N\) such that
 \begin{equation}
 \label{eq:recursion}
-  u(0)=a\qquad\text{and}\qquad u(\Suc(n))=f\bigl(u(n)\bigr)
-  \text{ for all }n\in\N.
+  u(0)=a\qquad\text{and}\qquad
+  u(\Suc(n))=f\bigl(u(n)\bigr)
+  \quad\text{for all }n\in\N.
 \end{equation}
 \end{lemma}
 
 \begin{proof}
-\textit{Uniqueness.}
+\textit{Uniqueness of \(u\).}
 If \(u\) and \(v\) both satisfy~\eqref{eq:recursion}, the set
-\(A=\{n:u(n)=v(n)\}\) contains \(0\) and is closed under \(\Suc\), so
-\(A=\N\) by~\Cref{ax:peano3}.
+\(\{n:u(n)=v(n)\}\) contains \(0\) and is closed under \(\Suc\), so
+equals \(\N\) by~\Cref{ax:peano3}.
 
 \medskip
 \noindent\textit{Existence.}
-We construct the graph of \(u\) as a set of pairs. Call a set
-\(s\subseteq\N\times\N\) a \emph{recursive sequence for \((a,f)\)} if
-\begin{enumerate}[label=(\roman*)]
-  \item \((0,a)\in s\), and
-  \item whenever \((n,y)\in s\), also \((\Suc(n),f(y))\in s\).
-\end{enumerate}
-Let \(\mathcal{S}\) be the collection of all such \(s\), and set
-\[
-  \Gamma \eqdef \bigcap_{s\in\mathcal{S}} s.
-\]
-Then \(\Gamma\) itself is a recursive sequence. We claim: for every
-\(n\in\N\) there is a unique \(y\in\N\) with \((n,y)\in\Gamma\).
+Call \(s\subseteq\N\times\N\) a \emph{recursive sequence} for
+\((a,f)\) if \((0,a)\in s\) and
+\((n,y)\in s\Rightarrow(\Suc(n),f(y))\in s\). The collection
+\(\mathcal{S}\) of all recursive sequences is nonempty, since
+\(\N\times\N\in\mathcal{S}\). Set
+\(\Gamma\eqdef\bigcap_{s\in\mathcal{S}}s\). Then \(\Gamma\) is itself
+a recursive sequence, and it is the least one.
 
-Existence of \(y\): let \(A\) be the set of \(n\) for which some \(y\)
-has \((n,y)\in\Gamma\). Clearly \(0\in A\). If \(n\in A\) with
-\((n,y)\in\Gamma\), then \((\Suc(n),f(y))\in\Gamma\), so
-\(\Suc(n)\in A\). Thus \(A=\N\).
+We claim that for every \(n\) there is a unique \(y\) with
+\((n,y)\in\Gamma\).
 
-Uniqueness of \(y\): let \(A\) be the set of \(n\) for which at most
-one \(y\) has \((n,y)\in\Gamma\). Then \(0\in A\): if
-\((0,y)\in\Gamma\) and \(y\neq a\), the set
-\(\Gamma\setminus\{(0,y)\}\) would still be a recursive sequence,
-contradicting minimality of \(\Gamma\). If \(n\in A\) and
-\((\Suc(n),z_1),(\Suc(n),z_2)\in\Gamma\), then there exist
-\(y_1,y_2\) with \((n,y_i)\in\Gamma\) and \(z_i=f(y_i)\); uniqueness
-at \(n\) forces \(y_1=y_2\), hence \(z_1=z_2\). So \(\Suc(n)\in A\),
-and \(A=\N\).
+\textit{Existence of \(y\).}
+Let \(A=\{n:\exists y\,(n,y)\in\Gamma\}\). Then \(0\in A\). If
+\(n\in A\) with \((n,y)\in\Gamma\), then
+\((\Suc(n),f(y))\in\Gamma\), so \(\Suc(n)\in A\). Thus \(A=\N\).
 
-Define \(u(n)\) to be the unique \(y\) with \((n,y)\in\Gamma\). Then
-\(u\) satisfies~\eqref{eq:recursion}.
+\textit{Uniqueness of \(y\), and the predecessor property.}
+We first show: if \((\Suc(n),z)\in\Gamma\), then
+\(z=f(y)\) where \(y\) is the unique value with \((n,y)\in\Gamma\)
+(assuming uniqueness at \(n\) for the moment). Indeed, if
+\(z\neq f(y)\), then \(\Gamma\setminus\{(\Suc(n),z)\}\) still contains
+\((0,a)\) and is closed under the recursive step: the only way to
+produce a pair at \(\Suc(n)\) from a pair at \(n\) is to form
+\((\Suc(n),f(y))\), which is retained. By injectivity
+of~\(\Suc\)~\eqref{ax:peano2}, no other predecessor index equals \(n\).
+Thus \(\Gamma\setminus\{(\Suc(n),z)\}\) is a recursive sequence,
+contradicting minimality of \(\Gamma\).
+
+Now let \(A\) be the set of \(n\) for which at most one \(y\) has
+\((n,y)\in\Gamma\). Then \(0\in A\): if \((0,y)\in\Gamma\) and
+\(y\neq a\), remove \((0,y)\) as above. If \(n\in A\) and
+\((\Suc(n),z_1),(\Suc(n),z_2)\in\Gamma\), the predecessor property
+forces \(z_1=z_2=f(y)\) for the unique \(y\) at \(n\). So
+\(\Suc(n)\in A\), and \(A=\N\).
+
+Define \(u(n)\) to be the unique \(y\) with \((n,y)\in\Gamma\). Since
+\(\Gamma\) is a recursive sequence, \(u(0)=a\) and
+\(u(\Suc(n))=f(u(n))\).
 \end{proof}
 
-\begin{definition}[Addition]
-\label{def:add}
-For each \(m\in\N\), apply~\Cref{lem:recursion} with \(a=m\) and
-\(f=\Suc\) to obtain \(u_m\). Set \(m+n\eqdef u_m(n)\). Thus
+\begin{definition}[Addition and multiplication]
+\label{def:add-mul}
+For each \(m\), apply~\Cref{lem:recursion} with \(a=m\) and \(f=\Suc\)
+to obtain \(u_m\), and set \(m+n\eqdef u_m(n)\). Thus
 \begin{equation}
 \label{eq:add}
   m+0=m,\qquad m+\Suc(n)=\Suc(m+n).
 \end{equation}
-\end{definition}
-
-\begin{definition}[Multiplication]
-\label{def:mul}
-For each \(m\in\N\), apply~\Cref{lem:recursion} with \(a=0\) and
-\(f(x)=x+m\) to obtain \(v_m\). Set \(m\cdot n\eqdef v_m(n)\). Thus
+For each \(m\), apply~\Cref{lem:recursion} with \(a=0\) and
+\(f(x)=x+m\) to obtain \(v_m\), and set \(m\cdot n\eqdef v_m(n)\). Thus
 \begin{equation}
 \label{eq:mul}
   m\cdot 0=0,\qquad m\cdot\Suc(n)=(m\cdot n)+m.
 \end{equation}
 \end{definition}
 
-\begin{lemma}[Arithmetic toolkit]
-\label{lem:arith}
-For all \(a,b,c\in\N\):
-\begin{enumerate}[label=(\roman*)]
-  \item \(0+n=n\) and \(n+1=\Suc(n)\);
-  \item \((a+b)+c=a+(b+c)\) and \(a+b=b+a\);
-  \item \(0\cdot n=0\), \(n\cdot 1=n\), and \(1\cdot n=n\);
-  \item \(a\cdot(b+c)=(a\cdot b)+(a\cdot c)\) and
-        \((a+b)\cdot c=(a\cdot c)+(b\cdot c)\);
-  \item \(a\cdot b=b\cdot a\) and \((a\cdot b)\cdot c=a\cdot(b\cdot c)\).
-\end{enumerate}
+\begin{lemma}[Zero on the left; successor as \(+1\)]
+\label{lem:add-basic}
+For every \(n\), one has \(0+n=n\) and \(n+1=\Suc(n)\).
 \end{lemma}
 
 \begin{proof}
-Each identity is proved by induction on the appropriate variable,
-using~\eqref{eq:add}--\eqref{eq:mul} and previously established
-clauses; cf.\ Landau~\cite{Landau1951}, Chapter~I. We record the inductive
-templates once: for a fixed identity \(E(n)\), check \(E(0)\) from the
-base clauses, then deduce \(E(\Suc(n))\) from \(E(n)\) and the
-recursive step. Commutativity of addition uses the auxiliary fact
-\(m+1=1+m\) (itself by induction), then inducts on the second summand.
-Distributivity and the remaining multiplicative laws follow similarly.
+For \(0+n=n\): induct on \(n\). The case \(n=0\) is~\eqref{eq:add}.
+Assuming \(0+n=n\), we have
+\(0+\Suc(n)=\Suc(0+n)=\Suc(n)\). For \(n+1\):
+\(n+1=n+\Suc(0)=\Suc(n+0)=\Suc(n)\).
+\end{proof}
+
+\begin{lemma}[Associativity of addition]
+\label{lem:add-assoc}
+For all \(a,b,c\), one has \((a+b)+c=a+(b+c)\).
+\end{lemma}
+
+\begin{proof}
+Fix \(a,b\) and induct on \(c\). For \(c=0\) both sides equal
+\(a+b\). Assuming the claim for \(c\),
+\begin{align*}
+  (a+b)+\Suc(c)
+    &=\Suc\bigl((a+b)+c\bigr)
+     =\Suc\bigl(a+(b+c)\bigr)
+     =a+\Suc(b+c)
+     =a+\bigl(b+\Suc(c)\bigr).
+\end{align*}
+\end{proof}
+
+\begin{lemma}[Commutativity of addition]
+\label{lem:add-comm}
+For all \(m,n\), one has \(m+n=n+m\).
+\end{lemma}
+
+\begin{proof}
+First, \(m+1=1+m\) for all \(m\): induct on \(m\). The case \(m=0\)
+is~\Cref{lem:add-basic}. Assuming \(m+1=1+m\),
+\begin{align*}
+  \Suc(m)+1
+    &=\Suc\bigl(\Suc(m)\bigr)
+     =\Suc(m+1)
+     =\Suc(1+m)
+     =1+\Suc(m).
+\end{align*}
+Now fix \(m\) and induct on \(n\). The case \(n=0\)
+is~\Cref{lem:add-basic} with~\eqref{eq:add}. Assuming
+\(m+n=n+m\),
+\begin{align*}
+  m+\Suc(n)
+    &=\Suc(m+n)=\Suc(n+m)=n+\Suc(m)=n+(m+1)\\
+    &=n+(1+m)=(n+1)+m=\Suc(n)+m,
+\end{align*}
+using~\Cref{lem:add-assoc} and the claim of the previous paragraph.
+\end{proof}
+
+\begin{lemma}[Successor on the left]
+\label{lem:succ-add}
+For all \(m,n\), one has \(\Suc(m)+n=\Suc(m+n)\).
+\end{lemma}
+
+\begin{proof}
+By~\Cref{lem:add-comm,lem:add-basic} and~\eqref{eq:add},
+\(\Suc(m)+n=(m+1)+n=m+(1+n)=m+\Suc(n)=\Suc(m+n)\).
+\end{proof}
+
+\begin{lemma}[Multiplication by one]
+\label{lem:mul-one}
+For every \(n\), one has \(n\cdot 1=n\) and \(1\cdot n=n\).
+\end{lemma}
+
+\begin{proof}
+First,
+\(n\cdot 1=n\cdot\Suc(0)=(n\cdot 0)+n=0+n=n\)
+by~\eqref{eq:mul} and~\Cref{lem:add-basic}. For \(1\cdot n\), induct on
+\(n\): the case \(n=0\) is~\eqref{eq:mul}; assuming \(1\cdot n=n\),
+\(1\cdot\Suc(n)=(1\cdot n)+1=n+1=\Suc(n)\).
 \end{proof}
 
 \begin{lemma}[Additive cancellation]
 \label{lem:add-cancel}
-If \(x+c=y+c\), then \(x=y\). Consequently, if \(a+k=a\), then
-\(k=0\).
+If \(x+c=y+c\), then \(x=y\). Consequently, if \(a+k=a\), then \(k=0\).
 \end{lemma}
 
 \begin{proof}
 Induct on \(c\). The case \(c=0\) is immediate. If
 \(x+\Suc(c)=y+\Suc(c)\), then \(\Suc(x+c)=\Suc(y+c)\), so
-\(x+c=y+c\) by~\Cref{ax:peano2}, hence \(x=y\) by the inductive
-hypothesis. For the consequence, take \(y=0\) and use
-\(a+0=a\) with~\Cref{lem:arith}(i) after rewriting via commutativity:
-\(a+k=a+0\Rightarrow k=0\).
+\(x+c=y+c\) by~\Cref{ax:peano2}, hence \(x=y\) by induction. For the
+consequence: \(a+k=a+0\) implies \(k=0\).
+\end{proof}
+
+\begin{lemma}[No nonzero sum is zero]
+\label{lem:sum-ne-zero}
+If \(a\neq 0\), then \(a+b\neq 0\) for every \(b\). In particular, if
+\(a+b=0\), then \(a=b=0\).
+\end{lemma}
+
+\begin{proof}
+Write \(a=\Suc(a')\) by~\Cref{lem:pred}. Then
+\(a+b=\Suc(a')+b=\Suc(a'+b)\neq 0\)
+by~\Cref{lem:succ-add} and~\Cref{ax:peano1}. The second claim follows.
 \end{proof}
 
 \begin{lemma}[No zero-divisors]
 \label{lem:no-zero-div}
-If \(a\neq 0\) and \(a\cdot b=0\), then \(b=0\). Equivalently: if
-\(a\cdot b=0\), then \(a=0\) or \(b=0\).
+If \(a\neq 0\) and \(a\cdot b=0\), then \(b=0\).
 \end{lemma}
 
 \begin{proof}
 Induct on \(b\). If \(b=0\) we are done. If \(b=\Suc(b')\), then
-\(a\cdot b=(a\cdot b')+a=0\). Writing \(a=\Suc(a')\)
-by~\Cref{lem:pred} (since \(a\neq 0\)), the sum
-\((a\cdot b')+\Suc(a')=\Suc\bigl((a\cdot b')+a'\bigr)\) cannot be
-\(0\) by~\Cref{ax:peano1}.
+\(a\cdot b=(a\cdot b')+a\). Write \(a=\Suc(a')\); then the sum equals
+\(\Suc\bigl((a\cdot b')+a'\bigr)\neq 0\)
+by~\Cref{lem:sum-ne-zero}, a contradiction.
 \end{proof}
+
+\begin{lemma}[Successor on the left in a product]
+\label{lem:mul-succ-left}
+For all \(m,n\), one has \(\Suc(m)\cdot n = m\cdot n + n\).
+\end{lemma}
+
+\begin{proof}
+Fix \(m\) and induct on \(n\). For \(n=0\) both sides are \(0\). Assuming
+the claim for \(n\),
+\begin{align*}
+  \Suc(m)\cdot\Suc(n)
+    &= \Suc(m)\cdot n + \Suc(m)
+     = (m\cdot n + n) + \Suc(m)
+     = m\cdot n + \bigl(n+\Suc(m)\bigr)
+     = m\cdot n + \Suc(n+m)\\
+    &= m\cdot n + \Suc(m+n)
+     = m\cdot n + \bigl(m+\Suc(n)\bigr)
+     = (m\cdot n + m) + \Suc(n)
+     = m\cdot\Suc(n) + \Suc(n),
+\end{align*}
+using~\Cref{lem:add-assoc,lem:add-comm,lem:add-basic} and~\eqref{eq:mul}.
+\end{proof}
+
+\begin{lemma}[Units]
+\label{lem:units}
+If \(a\cdot b=1\), then \(a=b=1\).
+\end{lemma}
+
+\begin{proof}
+Neither factor is \(0\), else the product is \(0\neq 1\). Write
+\(b=\Suc(b')\). Then \(a\cdot b = (a\cdot b')+a = 1\). If
+\(a\cdot b'\neq 0\), write \(a\cdot b'=\Suc(t)\); then
+\(\Suc(t)+a=\Suc(t+a)=1=\Suc(0)\), so \(t+a=0\), hence \(a=0\)
+by~\Cref{lem:sum-ne-zero}, a contradiction. Thus \(a\cdot b'=0\), so
+\(b'=0\) by~\Cref{lem:no-zero-div}, and \(b=1\). Then
+\(a\cdot 1=a=1\) by~\Cref{lem:mul-one}.
+\end{proof}
+
+\begin{lemma}[Cancellation in a self-product]
+\label{lem:mul-eq-self}
+If \(n\neq 0\) and \(n\cdot k=n\), then \(k=1\).
+\end{lemma}
+
+\begin{proof}
+Write \(k=\Suc(k')\) (since \(k=0\) would give \(n\cdot 0=0\neq n\)).
+Then \(n\cdot k=(n\cdot k')+n=n=n+0\), so \(n\cdot k'=0\)
+by~\Cref{lem:add-cancel}. Hence \(k'=0\) by~\Cref{lem:no-zero-div},
+and \(k=1\).
+\end{proof}
+
+\begin{remark}
+\label{rem:further-arith}
+Full left/right distributivity and the associativity and commutativity
+of multiplication follow the same inductive pattern
+as~\Cref{lem:add-assoc,lem:add-comm}; see~\cite{Landau1951}*{I}. The
+lemmas above are the only multiplicative identities invoked below, so we
+stop here.
+\end{remark}
 
 % =====================================================================
 \section{Order}
 \label{sec:order}
 
-\begin{definition}[Order]
+\begin{definition}
 \label{def:order}
-Write \(m\le n\) if and only if \(\exists k\in\N\) with \(m+k=n\).
-Write \(m<n\) if and only if \(m\le n\) and \(m\neq n\). The relations
-\(\ge\) and \(>\) are the opposites.
+Write \(m\le n\) if and only if \(\exists k\) with \(m+k=n\), and
+\(m<n\) if and only if \(m\le n\) and \(m\neq n\).
 \end{definition}
 
 \begin{lemma}[Order toolkit]
 \label{lem:order}
-For all \(a,b,c\in\N\):
+For all \(a,b,c\):
 \begin{enumerate}[label=(\roman*)]
-  \item \(a\le a\); if \(a\le b\) and \(b\le c\), then \(a\le c\);
+  \item \(a\le a\); \(\le\) is transitive; \(0\le a\);
   \item \(a\le b\) if and only if \(a+c\le b+c\);
-  \item if \(a\le b\) and \(b\le a\), then \(a=b\) (antisymmetry);
-  \item \(a<\Suc(a)\); in particular \(0\le a\);
+  \item if \(a\le b\) and \(b\le a\), then \(a=b\);
+  \item \(a\neq\Suc(a)\), and hence \(a<\Suc(a)\);
   \item \(a<b\) if and only if \(\exists k\neq 0\) with \(a+k=b\);
   \item if \(a\le b\), then \(\Suc(a)\le\Suc(b)\);
   \item if \(a<b\) and \(b<c\), then \(a<c\);
-  \item if \(a<b\), then \(\Suc(a)\le b\) (discreteness).
+  \item if \(a<b\), then \(\Suc(a)\le b\).
 \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-(i)~Take \(k=0\); for transitivity, add the witnesses and
-use~\Cref{lem:arith}(ii).
-(ii)~The forward direction rearranges by associativity and
-commutativity. The converse uses~\Cref{lem:add-cancel}.
+(i)~Witness \(0\); add witnesses for transitivity; witness \(a\) for
+\(0\le a\).
+(ii)~Rearrange using~\Cref{lem:add-assoc,lem:add-comm}; the converse
+uses~\Cref{lem:add-cancel}.
 (iii)~If \(a+k=b\) and \(b+\ell=a\), then \(a+(k+\ell)=a\), so
-\(k+\ell=0\) by~\Cref{lem:add-cancel}, hence \(k=0\)
-by~\Cref{lem:no-zero-div} (or directly: \(k\neq 0\) would make
-\(k+\ell\) a successor). Thus \(a=b\).
-(iv)~Use \(a+1=\Suc(a)\) and \(a\neq\Suc(a)\) (proved by induction via
-\Cref{ax:peano1,ax:peano2}). Then \(0\le a\) with witness \(a\).
-(v)~Immediate from the definition and~\Cref{lem:add-cancel}.
-(vi)~If \(a+k=b\), then \(\Suc(a)+k=\Suc(b)\).
-(vii)~Combine witnesses \(k,\ell\neq 0\); then \(k+\ell\neq 0\).
-(viii)~Write \(b=a+k\) with \(k\neq 0\), so \(k=\Suc(k')\) and
-\(b=\Suc(a)+k'\).
+\(k+\ell=0\) by~\Cref{lem:add-cancel}, hence \(k=\ell=0\)
+by~\Cref{lem:sum-ne-zero}.
+(iv)~Let \(A=\{n:n\neq\Suc(n)\}\). Then \(0\in A\)
+by~\Cref{ax:peano1}. If \(n\in A\) and \(\Suc(n)=\Suc(\Suc(n))\), then
+\(n=\Suc(n)\) by~\Cref{ax:peano2}, a contradiction. So \(A=\N\). With
+\(a+1=\Suc(a)\) we get \(a<\Suc(a)\).
+(v)~Immediate from~\Cref{lem:add-cancel}.
+(vi)~If \(a+k=b\), then \(\Suc(a)+k=\Suc(b)\)
+by~\Cref{lem:succ-add}.
+(vii)~Combine nonzero witnesses; their sum is nonzero
+by~\Cref{lem:sum-ne-zero}.
+(viii)~Write \(b=a+\Suc(k')=\Suc(a)+k'\)
+by~\Cref{lem:succ-add}.
 \end{proof}
 
 \begin{lemma}[Trichotomy]
 \label{lem:trichotomy}
-For all \(m,n\in\N\), exactly one of \(m<n\), \(m=n\), \(m>n\) holds.
+For all \(m,n\), exactly one of \(m<n\), \(m=n\), \(m>n\) holds.
 \end{lemma}
 
 \begin{proof}
 \textit{Existence.}
 Fix \(m\) and induct on \(n\). For \(n=0\): if \(m=0\) we are done;
-if \(m\neq 0\) then \(0<m\) by~\Cref{lem:order}(iv)--(v). Assuming the
-claim for \(n\), the three cases for \((m,n)\) upgrade to cases for
-\((m,\Suc(n))\) by~\Cref{lem:order}(iv),(viii).
+if \(m\neq 0\) then \(0<m\) by~\Cref{lem:order}(i),(v). Assuming the
+claim for \(n\): if \(m<n\) then \(m<\Suc(n)\) by
+\Cref{lem:order}(vii),(iv); if \(m=n\) then \(m<\Suc(n)\) by
+\Cref{lem:order}(iv); if \(n<m\) then \(\Suc(n)\le m\) by
+\Cref{lem:order}(viii), so \(m=\Suc(n)\) or \(m>\Suc(n)\).
 
 \textit{Exclusivity.}
-The pairs involving equality contradict \(m\neq n\) in the definition
-of \(<\). If \(m<n\) and \(n<m\), write \(m+k=n\) and \(n+\ell=m\) with
-\(k,\ell\neq 0\); then \(m+(k+\ell)=m\), so \(k+\ell=0\)
-by~\Cref{lem:add-cancel}, impossible since \(k\neq 0\).
+Pairs involving equality contradict \(m\neq n\). If \(m<n\) and
+\(n<m\), write \(m+k=n\) and \(n+\ell=m\) with \(k,\ell\neq 0\); then
+\(m+(k+\ell)=m\), so \(k+\ell=0\), contradicting~\Cref{lem:sum-ne-zero}.
 \end{proof}
 
 \begin{lemma}
@@ -388,30 +497,10 @@ One has \(n<2\) if and only if \(n=0\) or \(n=1\). Consequently,
 \begin{proof}
 If \(n=0\) or \(n=1\), then \(n<2\) by~\Cref{lem:order}(iv),(vii).
 Conversely, if \(n<2\) and \(n\neq 0\), then \(n=\Suc(m)\) and
-\(m+1<1+1\), so \(m<1\) by~\Cref{lem:order}(ii) for \(<\). The only
-natural number \(<1\) is \(0\), so \(n=1\).
-
-For the second claim: if \(n\ge 2\) then \(n>1\). If \(n>1\), then
-\(n\neq 0,1\), so \(\neg(n<2)\) by the first claim, hence \(n\ge 2\) by
-trichotomy.
-\end{proof}
-
-\begin{theorem}[Well-ordering]
-\label{thm:wellorder}
-Every nonempty \(S\subseteq\N\) has a least element.
-\end{theorem}
-
-\begin{proof}
-Let \(P(n)\) assert that every subset of \(\N\) meeting
-\(\{k:k\le n\}\) has a least element. Then \(P(0)\) holds because the
-only candidate is \(0\), which is least in \(\N\)
-by~\Cref{lem:order}(iv). Assuming \(P(n)\), let \(S\) meet
-\(\{k:k\le\Suc(n)\}\). If \(S\) meets \(\{k:k\le n\}\), apply
-\(P(n)\). Otherwise every element of \(S\) exceeds \(n\), yet some
-\(s\in S\) has \(s\le\Suc(n)\). By~\Cref{lem:order}(viii) and
-antisymmetry, \(s=\Suc(n)\), which is then least in \(S\). Induction
-gives \(P(n)\) for all \(n\); for nonempty \(S\) pick \(s\in S\) and
-apply \(P(s)\).
+\(m+1<1+1\), so \(m<1\) by~\Cref{lem:order}(ii). The only number
+\(<1\) is \(0\), so \(n=1\). For the second claim: if \(n\ge 2\) then
+\(n>1\); if \(n>1\) then \(n\neq 0,1\), so \(\neg(n<2)\), hence
+\(n\ge 2\) by trichotomy.
 \end{proof}
 
 % =====================================================================
@@ -420,7 +509,7 @@ apply \(P(s)\).
 
 \begin{definition}
 \label{def:dvd}
-Write \(d\mid n\) if \(\exists k\in\N\) with \(n=d\cdot k\).
+Write \(d\mid n\) if \(\exists k\) with \(n=d\cdot k\).
 \end{definition}
 
 \begin{lemma}[Divisibility toolkit]
@@ -428,7 +517,6 @@ Write \(d\mid n\) if \(\exists k\in\N\) with \(n=d\cdot k\).
 \begin{enumerate}[label=(\roman*)]
   \item \(a\mid a\), \(1\mid a\), and \(a\mid 0\);
   \item if \(a\mid b\) and \(b\mid c\), then \(a\mid c\);
-  \item if \(a\mid b\) and \(a\mid c\), then \(a\mid(b+c)\);
   \item if \(d\mid n\) and \(n\neq 0\), then \(d\neq 0\) and \(d\le n\);
   \item if \(n=d\cdot k\) with \(d>1\) and \(k>1\), then
         \(1<d<n\) and \(1<k<n\).
@@ -436,68 +524,78 @@ Write \(d\mid n\) if \(\exists k\in\N\) with \(n=d\cdot k\).
 \end{lemma}
 
 \begin{proof}
-(i)--(iii) are immediate from~\Cref{lem:arith}.
-(iv)~If \(d=0\) then \(n=0\) by~\Cref{lem:arith}(iii). Writing
-\(n=d\cdot\Suc(k')=(d\cdot k')+d\) gives \(d\le n\).
-(v)~Apply (iv) and~\Cref{lem:no-zero-div}: neither factor is \(0\) or
-\(1\), and \(d=n\) would force \(k=1\).
+(i)~Use~\Cref{lem:mul-one} and~\eqref{eq:mul}.
+(ii)~Compose the witnesses.
+(iii)~If \(d=0\) then \(n=0\) by~\eqref{eq:mul}. Since \(n\neq 0\) we
+have \(k\neq 0\) by~\Cref{lem:no-zero-div}, so \(k=\Suc(k')\) and
+\(n=(d\cdot k')+d\), whence \(d\le n\).
+(iv)~Neither factor is \(0\). The inequalities \(d>1\) and \(k>1\) are
+hypotheses. If \(d=n\), then \(n\cdot k=n\), so \(k=1\)
+by~\Cref{lem:mul-eq-self}, a contradiction. Thus \(d\neq n\). Combined
+with~(iii) and trichotomy, \(d<n\). For the cofactor: write
+\(d=\Suc(d')\) with \(d'\neq 0\) (since \(d>1\)). Then
+\[
+  n=d\cdot k=\Suc(d')\cdot k=d'\cdot k + k
+\]
+by~\Cref{lem:mul-succ-left}. Here \(d'\cdot k\neq 0\)
+by~\Cref{lem:no-zero-div}, so \(k<n\) by~\Cref{lem:order}(v). The same
+argument with the roles of the displayed summands reversed is
+unnecessary: we already have \(1<k\) by hypothesis.
 \end{proof}
 
 % =====================================================================
 \section{Primes, composites, and even numbers}
 \label{sec:prime}
 
-\begin{definition}[Prime]
+\begin{definition}
 \label{def:prime}
 A number \(p\) is \emph{prime} if \(p>1\) and every divisor of \(p\)
 is \(1\) or \(p\).
 \end{definition}
 
-\begin{definition}[Composite]
+\begin{definition}
 \label{def:composite}
 A number \(n\) is \emph{composite} if \(n>1\) and \(n\) is not prime.
 \end{definition}
 
-\begin{definition}[Even]
+\begin{definition}
 \label{def:even}
 A number \(n\) is \emph{even} if \(2\mid n\).
 \end{definition}
 
-\begin{remark}[Prime versus irreducible]
+\begin{remark}
 \label{rem:irreducible}
-\Cref{def:prime} is the \emph{irreducible} condition in the monoid
-\((\N,\cdot)\): after noting that \(uv=1\) forces \(u=v=1\) (so the
-only unit is \(1\)), it says \(p\) has no nontrivial factorization.
-We never use the Euclid property
+\Cref{def:prime} is the irreducible condition in the multiplicative
+monoid of positive natural numbers: by~\Cref{lem:units} the only unit
+is \(1\), so a prime is precisely a nonunit with no nontrivial
+factorization. We never use Euclid's lemma
 \(p\mid ab\Rightarrow p\mid a\lor p\mid b\).
 \end{remark}
 
 \begin{lemma}
 \label{lem:composite-factors}
-A number \(n>1\) is composite if and only if there exist \(d,k\in\N\)
-with \(n=d\cdot k\), \(1<d<n\), and \(1<k<n\).
+A number \(n>1\) is composite if and only if there exist \(d,k\) with
+\(n=d\cdot k\), \(1<d<n\), and \(1<k<n\).
 \end{lemma}
 
 \begin{proof}
-If such \(d,k\) exist, then \(d\mid n\) with \(d\neq 1\) and
-\(d\neq n\), so \(n\) is not prime, hence composite. Conversely, if
-\(n\) is composite then some divisor \(d\) satisfies \(d\neq 1\) and
-\(d\neq n\). By~\Cref{lem:dvd}(iv) and~\Cref{lem:lt-two}, one has
-\(1<d<n\). Writing \(n=d\cdot k\) and applying~\Cref{lem:dvd}(v)
-gives \(1<k<n\).
+If such \(d,k\) exist, then \(d\mid n\) with \(d\neq 1,n\), so \(n\) is
+not prime. Conversely, if \(n\) is composite then some divisor \(d\)
+satisfies \(d\neq 1\) and \(d\neq n\). By~\Cref{lem:dvd}(iii) and
+\Cref{lem:lt-two}, one has \(1<d<n\). Write \(n=d\cdot k\). Then
+\(k\neq 0\) (since \(n\neq 0\)) and \(k\neq 1\) (else \(d=n\)). Thus
+\(k>1\), and~\Cref{lem:dvd}(iv) yields \(1<k<n\).
 \end{proof}
 
 \begin{example}
 \label{ex:small}
 \begin{enumerate}[label=(\alph*)]
-  \item \(0\) is even, since \(0=2\cdot 0\), but not prime
-        (\(0\not>1\)).
-  \item \(1\) is neither even nor prime.
-  \item \(2\) will be shown to be an even prime
-        (\Cref{prop:two}).
-  \item \(3\) is prime: its only divisors are \(1\) and \(3\)
-        (any divisor \(d\) satisfies \(d\le 3\) and \(d\neq 0\), hence
-        \(d\in\{1,2,3\}\), and \(2\nmid 3\)).
+  \item \(0\) is even (\(0=2\cdot 0\)) but not prime, and not composite.
+  \item \(1\) is neither even, prime, nor composite.
+  \item \(2\) is an even prime (\Cref{prop:two} below).
+  \item \(3\) is prime: any divisor \(d\) satisfies \(d\le 3\) and
+        \(d\neq 0\), so \(d\in\{1,2,3\}\), and \(2\nmid 3\) because
+        \(3\neq 2\cdot 0\) and \(3\neq 2\cdot 1\).
   \item \(4\) is composite: \(4=2\cdot 2\) with \(1<2<4\).
 \end{enumerate}
 \end{example}
@@ -508,11 +606,11 @@ If \(d\mid 2\), then \(d=1\) or \(d=2\).
 \end{lemma}
 
 \begin{proof}
-By~\Cref{lem:dvd}(iv), \(d\neq 0\) and \(d\le 2\).
-By~\Cref{lem:lt-two} and trichotomy, \(d=1\) or \(d=2\).
+By~\Cref{lem:dvd}(iii), \(d\neq 0\) and \(d\le 2\).
+By~\Cref{lem:lt-two}, \(d=1\) or \(d=2\).
 \end{proof}
 
-\begin{proposition}[Two is an even prime]
+\begin{proposition}
 \label{prop:two}
 The number \(2\) is prime and even.
 \end{proposition}
@@ -528,84 +626,47 @@ If \(n>2\) and \(n=2\cdot k\), then \(1<k<n\).
 \end{lemma}
 
 \begin{proof}
-If \(k=0\) then \(n=0\), contradicting \(n>2\). If \(k=1\) then
-\(n=2\), again a contradiction. Thus \(k>1\). Also \(2>1\), so
-\Cref{lem:dvd}(v) gives \(k<n\).
+If \(k=0\) then \(n=0\); if \(k=1\) then \(n=2\); both contradict
+\(n>2\). Thus \(k>1\). Also \(2>1\), so~\Cref{lem:dvd}(iv) gives
+\(k<n\).
 \end{proof}
 
-% =====================================================================
-\section{No prime less than two}
-\label{sec:below}
-
-\begin{theorem}[No prime below two]
-\label{thm:below}
-If \(n<2\), then \(n\) is not prime. A fortiori, no even prime is
-strictly less than \(2\).
-\end{theorem}
+\begin{lemma}
+\label{lem:below}
+If \(n<2\), then \(n\) is not prime.
+\end{lemma}
 
 \begin{proof}
 By~\Cref{lem:lt-two}, \(n=0\) or \(n=1\); neither satisfies \(n>1\).
 \end{proof}
 
 % =====================================================================
-\section{No even prime greater than two}
-\label{sec:above}
+\section{The uniqueness argument}
+\label{sec:unique}
 
 \begin{theorem}[Even numbers above two are composite]
 \label{thm:above}
-If \(n>2\) and \(n\) is even, then \(n\) is not prime. Equivalently,
-every even natural number strictly greater than \(2\) is composite.
+If \(n>2\) and \(n\) is even, then \(n\) is composite.
 \end{theorem}
 
-We give two proofs. They rest on different arithmetic ideas: the
-first uses only the divisor clause in~\Cref{def:prime}; the second
-exhibits an explicit proper factor.
-
-\subsection{Proof I: definitional}
-\label{sec:proofI}
-
-\begin{proof}[Proof I of~\Cref{thm:above}]
-We first prove the equivalent uniqueness form
-\[
-  \forall p\in\N,\quad
-  \IsPrime(p)\land\IsEven(p)\Rightarrow p=2,
-\]
-and then deduce the theorem.
-
-Let \(p\) be prime and even. Then \(2\mid p\).
-By~\Cref{def:prime}, \(2=1\) or \(2=p\). The first alternative is
-false by~\Cref{lem:0neq1}, so \(p=2\).
-
-Now if \(n>2\) is even and (toward a contradiction) prime, the claim
-just proved forces \(n=2\), contradicting \(n>2\). Since \(n>2>1\),
-the number \(n\) is composite.
+\begin{proof}[Proof I (definitional)]
+Since \(n\) is even, \(2\mid n\). Also \(2\neq 1\)
+by~\Cref{lem:0neq1}, and \(2\neq n\) because \(n>2\). Thus \(n\) has a
+divisor other than \(1\) and \(n\). Since \(n>1\), \(n\) is composite.
 \end{proof}
 
-\begin{remark}[Presentation variants]
+\begin{proof}[Proof II (factorization)]
+Write \(n=2\cdot k\). By~\Cref{lem:halve}, \(1<k<n\).
+By~\Cref{lem:composite-factors}, \(n\) is composite.
+\end{proof}
+
+\begin{remark}
 \label{rem:variants}
-The same divisor-clause inference may be packaged as a contradiction
-(``assume \(p\neq 2\)'') or routed through the observation that if
-primes \(p,q\) satisfy \(p\mid q\) then \(p=q\). These are not
-independent proofs of~\Cref{thm:above}; they rearrange Proof~I.
-\end{remark}
-
-\subsection{Proof II: factorization}
-\label{sec:proofII}
-
-\begin{proof}[Proof II of~\Cref{thm:above}]
-Let \(n>2\) be even, so \(n=2\cdot k\) for some \(k\).
-By~\Cref{lem:halve}, \(1<k<n\). Thus \(k\mid n\) with \(k\neq 1\) and
-\(k\neq n\), so \(n\) fails~\Cref{def:prime}. Since \(n>1\), \(n\) is
-composite by~\Cref{def:composite}
-(or~\Cref{lem:composite-factors}).
-\end{proof}
-
-\begin{remark}[Least counterexamples are idle here]
-\label{rem:lce}
-\Cref{thm:wellorder} would supply a least even prime \(>2\) if any
-existed, but the factorization in Proof~II already rules out
-\emph{every} such candidate. Minimality is never used, so we do not
-record a separate least-counterexample proof.
+Proof~I applies the divisor clause to the factor \(2\); Proof~II
+exhibits the cofactor \(k\) as a proper factor. These are different
+arithmetic ideas. Packaging Proof~I as a contradiction, or routing it
+through ``if primes \(p,q\) satisfy \(p\mid q\) then \(p=q$,'' does not
+yield an independent proof.
 \end{remark}
 
 \begin{corollary}
@@ -614,118 +675,87 @@ If \(p\) is prime and even, then \(p=2\).
 \end{corollary}
 
 \begin{proof}
-Contained in Proof~I; alternatively, combine~\Cref{thm:above} with
-\(p>1\Rightarrow p\ge 2\) from~\Cref{lem:lt-two} and trichotomy.
+By~\Cref{def:prime}, \(p>1\), so \(p\ge 2\) by~\Cref{lem:lt-two}. If
+\(p>2\), then~\Cref{thm:above} says \(p\) is composite, contradicting
+primality. By trichotomy, \(p=2\).
 \end{proof}
 
-\begin{lemma}[Equivalence of formulations]
+\begin{lemma}
 \label{lem:above-iff-unique}
-The following are equivalent:
+The following are equivalent, and neither asserts that \(2\) is prime:
 \begin{enumerate}[label=(\roman*)]
-  \item \(\forall n\in\N\), if \(n>2\) and \(n\) is even, then \(n\)
-        is not prime;
-  \item \(\forall p\in\N\), if \(p\) is prime and even, then \(p=2\).
+  \item every even \(n>2\) is not prime;
+  \item every even prime equals \(2\).
 \end{enumerate}
-Neither statement by itself asserts that \(2\) is prime or even.
 \end{lemma}
 
 \begin{proof}
 (i)\(\Rightarrow\)(ii): if \(p\) is an even prime and \(p>2\),
-contradict~(i); since \(p>1\), trichotomy yields \(p=2\).
+contradict~(i); since \(p>1\), get \(p=2\).
 (ii)\(\Rightarrow\)(i): if \(n>2\) is even and prime,
 then~(ii) forces \(n=2\).
 \end{proof}
 
-% =====================================================================
-\section{The uniqueness theorem}
-\label{sec:grand}
-
 \begin{theorem}[Uniqueness of the even prime]
 \label{thm:grand}
-The following hold, and moreover~(A) is equivalent to~(B):
-\begin{enumerate}[label=(\Alph*)]
-  \item \(2\) is prime and even, and every even prime equals \(2\);
-  \item there is no even prime \(n<2\), there is no even prime
-        \(n>2\), and \(2\) is an even prime;
-  \item every even prime equals \(2\)
-        \emph{(uniqueness only)};
-  \item there is no even prime other than \(2\)
-        \emph{(uniqueness only, negative form)}.
-\end{enumerate}
-Statements~(C) and~(D) are equivalent to each other and
-to~\Cref{lem:above-iff-unique}, but they do \emph{not} imply~(A)
-without the separate witness that \(2\) is an even prime.
+The number \(2\) is an even prime, and every even prime equals \(2\).
+Equivalently: there is no even prime \(n<2\), there is no even prime
+\(n>2\), and \(2\) is an even prime.
 \end{theorem}
 
 \begin{proof}
-\Cref{prop:two} gives that \(2\) is an even prime.
-\Cref{thm:below} gives that no prime (hence no even prime) is \(<2\).
-\Cref{thm:above} gives that no even prime is \(>2\).
-\Cref{cor:unique-form} gives that every even prime equals \(2\).
-This establishes~(A) and~(B), which are equivalent by trichotomy on
-any even prime.
-
-The equivalence of~(C) and~(D) is pure quantifier logic, and their
-equivalence to~\Cref{lem:above-iff-unique} is that lemma. Finally,
-(C) alone does not yield that \(2\) is prime: one needs
-\Cref{prop:two} (or an equivalent witness) to upgrade~(C) to~(A).
+\Cref{prop:two} supplies the witness. \Cref{lem:below} rules out
+primes \(<2\). \Cref{thm:above} rules out even primes \(>2\).
+\Cref{cor:unique-form} gives uniqueness-only. The equivalence of the
+two formulations is trichotomy on any even prime. Note that
+uniqueness-only alone does not yield the witness; one needs
+\Cref{prop:two} (or an equivalent) to obtain existence.
 \end{proof}
 
 \begin{corollary}
 \label{cor:unique}
-The unique even prime natural number is \(2\).
+There exists a unique even prime, namely \(2\).
 \end{corollary}
-
-% =====================================================================
-\section{Dependence}
-\label{sec:dep}
-
-The external assumptions are: informal classical set theory; a
-Dedekind--Peano structure \((\N,0,\Suc)\). No external theorem of
-number theory is used.
-
-The logical spine is
-\[
-  \text{Peano}
-  \to\text{recursion}
-  \to(+,\cdot)
-  \to\text{order}
-  \to\text{divisibility}
-  \to\text{primes}
-  \to\text{\Cref{thm:below,thm:above,thm:grand}}.
-\]
-Well-ordering is developed for completeness but is not required for
-the uniqueness proof (see~\Cref{rem:lce}). Of the two proofs
-of~\Cref{thm:above}, Proof~I uses only the divisor clause and
-\(2\neq 1\); Proof~II uses the halving lemma and the definition of
-composite.
 
 % =====================================================================
 \section{Companion Lean formalization}
 \label{sec:lean}
 
-A companion development in \textsc{Lean}~4 (stdlib only, no Mathlib)
-checks the uniqueness layer on the kernel type \texttt{Nat}. In
-particular it establishes:
-\begin{itemize}[leftmargin=1.4em]
-  \item \(\IsPrime\), \(\IsComp\), \(\IsEven\), and
-        \(\mathrm{Irreducible}\), with
-        \(\IsPrime\leftrightarrow\mathrm{Irreducible}\) and the
-        proper-factorization characterization of composites;
-  \item the witness that \(2\) is an even prime, together with the
-        examples \(0\) even, \(1\) not even, \(3\) prime, \(4\)
-        composite;
-  \item Proofs~I and~II of~\Cref{thm:above}, and the repaired
-        equivalences of~\Cref{thm:grand};
-  \item a specification certificate separating uniqueness-only
-        claims from existence+uniqueness.
-\end{itemize}
-The Lean code does \emph{not} reconstruct \(\N\) from the Peano
-axioms; it takes \texttt{Nat} as given and uses kernel automation
-(e.g.\ \texttt{omega}) for routine inequalities. Thus the
-machine-checked artifact certifies the uniqueness argument relative
-to Lean's \(\N\), while~\Cref{sec:peano,sec:arith,sec:order} supply
-the narrative Peano development.
+A companion development in \textsc{Lean}~4 (stdlib only) lives in
+\texttt{lean/} and is built by \texttt{lake build \&\& lake test}. It
+checks the uniqueness layer on kernel \texttt{Nat}:
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Paper} & \textbf{Lean} \\
+\midrule
+\Cref{def:prime,def:composite,def:even}
+  & \texttt{IsPrime}, \texttt{IsComposite}, \texttt{IsEven} \\
+\Cref{prop:two}
+  & \texttt{isPrime\_two}, \texttt{isEven\_two} \\
+Proof~I / \Cref{cor:unique-form}
+  & \texttt{eq\_two\_of\_isPrime\_of\_isEven} \\
+Proof~II / \Cref{thm:above}
+  & \texttt{isComposite\_of\_gt\_two\_of\_isEven\_factorization} \\
+\Cref{lem:below}
+  & \texttt{not\_isPrime\_of\_lt\_two} \\
+\Cref{thm:grand} (existence+uniqueness)
+  & \texttt{UniqueEvenPrime}, \texttt{existsUnique\_even\_prime} \\
+uniqueness-only
+  & \texttt{TargetClaim} / \texttt{EveryEvenPrimeEqTwo} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Lean does \emph{not} reconstruct \(\N\) from the Peano axioms. It
+assumes kernel \texttt{Nat} and uses automation for routine
+inequalities. The Peano narrative
+of~\Cref{sec:peano,sec:arith,sec:order} is therefore checked by the
+reader; the uniqueness argument relative to Lean's \(\N\) is checked by
+the kernel. See \texttt{lean/README.md}.
 
 % =====================================================================
 \begin{thebibliography}{9}
@@ -734,16 +764,6 @@ the narrative Peano development.
 E.~Landau,
 \textit{Foundations of Analysis},
 Chelsea, New York, 1951.
-
-\bibitem{Mendelson2015}
-E.~Mendelson,
-\textit{Introduction to Mathematical Logic},
-6th~ed., CRC Press, Boca Raton, FL, 2015.
-
-\bibitem{HardyWright2008}
-G.~H.~Hardy and E.~M.~Wright,
-\textit{An Introduction to the Theory of Numbers},
-6th~ed., Oxford University Press, Oxford, 2008.
 
 \end{thebibliography}
 
