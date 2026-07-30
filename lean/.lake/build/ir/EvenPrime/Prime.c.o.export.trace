@@ -1,5 +1,0 @@
-{"log":
- [{"message":
-   ".> /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.16.0/bin/clang -c -o ././.lake/build/ir/EvenPrime/Prime.c.o.export ././.lake/build/ir/EvenPrime/Prime.c -I /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.16.0/include -fstack-clash-protection -fwrapv -fPIC -fvisibility=hidden -Wno-unused-command-line-argument --sysroot /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.16.0 -nostdinc -isystem /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.16.0/include/clang -O3 -DNDEBUG -DLEAN_EXPORTING",
-   "level": "trace"}],
- "depHash": "504289234517302916"}
