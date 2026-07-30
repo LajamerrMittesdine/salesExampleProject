@@ -1,17 +1,23 @@
-import EvenPrime.Prime
-import EvenPrime.Proofs
 import EvenPrime.Spec
-import EvenPrime.Grand
+
+/-!
+# Concrete tests and regression examples (not part of the library API)
+-/
 
 namespace EvenPrime
 
+/-- Computational check approximating `IsPrime` (no `d = 0` escape). -/
 def checkPrime (n : Nat) : Bool :=
   decide (n > 1) &&
     (List.range (n + 1)).all fun d =>
-      !decide (d ∣ n) || d == 0 || d == 1 || d == n
+      !(decide (d ∣ n)) || d == 1 || d == n
 
 def checkEven (n : Nat) : Bool :=
   n % 2 == 0
+
+/-- Soundness of the Bool checker on the tested shape. -/
+theorem checkEven_iff_isEven (n : Nat) : checkEven n = true ↔ IsEven n := by
+  simp [checkEven, isEven_iff_mod_two]
 
 def runTests : Option String := Id.run do
   let mut failures : List String := []
@@ -20,6 +26,7 @@ def runTests : Option String := Id.run do
   if !(checkEven 2) then failures := "2 should be even" :: failures
   if !(checkPrime 2) then failures := "2 should be prime" :: failures
   if !(checkPrime 3) then failures := "3 should be prime" :: failures
+  if checkPrime 1 then failures := "1 should not be prime" :: failures
   if checkPrime 4 then failures := "4 should not be prime" :: failures
   for n in [4, 6, 8, 10, 12, 14, 16, 18, 20, 100, 1000] do
     if !(checkEven n) then failures := s!"{n} should be even" :: failures
@@ -31,12 +38,17 @@ def runTests : Option String := Id.run do
   | [] => none
   | fs => some (String.intercalate "; " fs.reverse)
 
-#eval runTests
+/-- Fail elaboration if concrete tests fail. -/
+def assertTests : IO Unit := do
+  match runTests with
+  | none => pure ()
+  | some msg => throw <| IO.userError s!"EvenPrime tests failed: {msg}"
 
-theorem all_primary_agree {p : Nat} (hp : IsPrime p) (he : IsEven p) : p = 2 :=
-  even_prime_eq_two hp he
+#eval assertTests
 
-example : even_prime_eq_two two_is_prime two_is_even = rfl := rfl
-example : even_prime_eq_two_by_factorization two_is_prime two_is_even = rfl := rfl
+example : eq_two_of_isPrime_of_isEven isPrime_two isEven_two = rfl := rfl
+example : eq_two_of_isPrime_of_isEven_factorization isPrime_two isEven_two = rfl := rfl
+example : IsComposite 4 := isComposite_four
+example : IsEven 0 := isEven_zero
 
 end EvenPrime

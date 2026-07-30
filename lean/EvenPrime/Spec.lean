@@ -1,102 +1,105 @@
-import EvenPrime.Prime
-import EvenPrime.Proofs
-import EvenPrime.Grand
+import EvenPrime.Unique
+import EvenPrime.AboveTwo
+import EvenPrime.Basic
 
 /-!
-# Specification certificate (v2)
+# Trusted reading surface (paper Spec)
 
-Trusted reading surface + audits + anti-triviality.
-Equivalences carefully separate uniqueness-only from existence+uniqueness.
+Single vocabulary for the informal claim. All names here are the
+English-facing API; proofs live in `Unique` / `AboveTwo`.
 -/
 
 namespace EvenPrime
-namespace Spec
 
-/-- **Trusted reading surface.**
-English: “Every even prime natural number equals 2.” (uniqueness-only) -/
-def TargetClaim : Prop :=
-  ∀ p : Nat, IsPrime p → IsEven p → p = 2
+/-- **Trusted reading surface (uniqueness-only).**
+English: every even prime natural number equals 2.
+Paper: `thm:grand`(C). Does *not* by itself assert that 2 is prime. -/
+abbrev TargetClaim : Prop := EveryEvenPrimeEqTwo
 
-def UniqueEvenPrime : Prop :=
-  IsPrime 2 ∧ IsEven 2 ∧ TargetClaim
+/-- Existence + uniqueness. Paper: `thm:grand`(A) / Cor. unique. -/
+abbrev UniqueEvenPrimeClaim : Prop := UniqueEvenPrime
 
-def NoOtherEvenPrime : Prop :=
-  ¬ ∃ p : Nat, IsPrime p ∧ IsEven p ∧ p ≠ 2
+/-- Negative uniqueness-only. Paper: `thm:grand`(D). -/
+abbrev NoOtherEvenPrime : Prop := NoEvenPrimeNeTwo
 
-def EvensAboveTwoComposite : Prop :=
+/-- Above-two form (not-prime). Equivalent to `TargetClaim`. -/
+abbrev EvensAboveTwoNotPrime : Prop :=
   ∀ n : Nat, n > 2 → IsEven n → ¬ IsPrime n
 
-theorem TargetClaim_iff_NoOtherEvenPrime : TargetClaim ↔ NoOtherEvenPrime :=
-  Grand.unique_iff_no_other
+/-- Above-two form (composite). -/
+abbrev EvensAboveTwoComposite : Prop :=
+  ∀ n : Nat, n > 2 → IsEven n → IsComposite n
 
-theorem TargetClaim_iff_EvensAboveTwoComposite :
-    TargetClaim ↔ EvensAboveTwoComposite :=
-  Grand.unique_iff_above
+theorem targetClaim_proofI : TargetClaim :=
+  everyEvenPrimeEqTwo
 
-/-- Existence+uniqueness is TargetClaim plus the witness for 2. -/
-theorem UniqueEvenPrime_iff :
-    UniqueEvenPrime ↔ (IsPrime 2 ∧ IsEven 2 ∧ TargetClaim) := Iff.rfl
+theorem targetClaim_proofII : TargetClaim :=
+  fun _p hp he => eq_two_of_isPrime_of_isEven_factorization hp he
 
-theorem proofI_proves_TargetClaim : TargetClaim :=
-  fun _p hp he => even_prime_eq_two hp he
+theorem targetClaim_iff_noOtherEvenPrime : TargetClaim ↔ NoOtherEvenPrime :=
+  everyEvenPrimeEqTwo_iff_noEvenPrimeNeTwo
 
-theorem proofII_proves_TargetClaim : TargetClaim :=
-  fun _p hp he => even_prime_eq_two_by_factorization hp he
+theorem targetClaim_iff_evensAboveTwoNotPrime :
+    TargetClaim ↔ EvensAboveTwoNotPrime :=
+  everyEvenPrimeEqTwo_iff_not_isPrime_of_gt_two_of_isEven
 
-theorem TargetClaim_with_witness : UniqueEvenPrime :=
-  ⟨two_is_prime, two_is_even, proofI_proves_TargetClaim⟩
+theorem evensAboveTwoComposite_proofI : EvensAboveTwoComposite :=
+  fun _n hn he => isComposite_of_gt_two_of_isEven hn he
+
+theorem evensAboveTwoComposite_proofII : EvensAboveTwoComposite :=
+  fun _n hn he => isComposite_of_gt_two_of_isEven_factorization hn he
+
+theorem uniqueEvenPrimeClaim_holds : UniqueEvenPrimeClaim :=
+  uniqueEvenPrime
 
 /-! ## Anti-triviality -/
 
-theorem not_all_even_primes_are_three :
+theorem not_forall_eq_three_of_isPrime_of_isEven :
     ¬ ∀ p : Nat, IsPrime p → IsEven p → p = 3 := by
   intro h
-  have : 2 = 3 := h 2 two_is_prime two_is_even
-  exact absurd this (by decide)
+  exact absurd (h 2 isPrime_two isEven_two) (by decide)
 
-theorem exists_even_prime : ∃ p : Nat, IsPrime p ∧ IsEven p :=
-  ⟨2, two_is_prime, two_is_even⟩
+theorem exists_isPrime_isEven : ∃ p : Nat, IsPrime p ∧ IsEven p :=
+  ⟨2, isPrime_two, isEven_two⟩
 
-theorem exists_odd_prime : ∃ p : Nat, IsPrime p ∧ ¬ IsEven p := by
-  refine ⟨3, three_is_prime, ?_⟩
+theorem exists_isPrime_not_isEven : ∃ p : Nat, IsPrime p ∧ ¬ IsEven p := by
+  refine ⟨3, isPrime_three, ?_⟩
   intro he
-  have : 3 % 2 = 0 := (isEven_iff_mod_two 3).1 he
-  exact absurd this (by decide)
+  exact absurd ((isEven_iff_mod_two 3).1 he) (by decide)
 
-theorem exists_even_composite : ∃ n : Nat, IsEven n ∧ IsComposite n :=
-  ⟨4, ⟨2, rfl⟩, four_is_composite⟩
+theorem exists_isEven_isComposite : ∃ n : Nat, IsEven n ∧ IsComposite n :=
+  ⟨4, ⟨2, rfl⟩, isComposite_four⟩
 
+/-- Spec certificate: uniqueness, audits, anti-triviality, `∃!`. -/
 theorem spec_certificate :
     TargetClaim
-    ∧ UniqueEvenPrime
+    ∧ UniqueEvenPrimeClaim
+    ∧ ExistsUniqueEvenPrime
     ∧ (TargetClaim ↔ NoOtherEvenPrime)
-    ∧ (TargetClaim ↔ EvensAboveTwoComposite)
+    ∧ (TargetClaim ↔ EvensAboveTwoNotPrime)
+    ∧ EvensAboveTwoComposite
     ∧ (∀ n, IsEven n ↔ n % 2 = 0)
     ∧ (∀ n, IsPrime n ↔ IsIrreducible n)
     ∧ (∀ n, IsComposite n ↔
         n > 1 ∧ ∃ d k, n = d * k ∧ 1 < d ∧ d < n ∧ 1 < k ∧ k < n)
-    ∧ (∃ p, IsPrime p ∧ IsEven p)
-    ∧ (∃ p, IsPrime p ∧ ¬ IsEven p)
     ∧ IsEven 0
     ∧ ¬ IsEven 1
+    ∧ (∃ p, IsPrime p ∧ IsEven p)
+    ∧ (∃ p, IsPrime p ∧ ¬ IsEven p)
     ∧ ¬ ∀ p, IsPrime p → IsEven p → p = 3 :=
-  ⟨ proofI_proves_TargetClaim
-  , TargetClaim_with_witness
-  , TargetClaim_iff_NoOtherEvenPrime
-  , TargetClaim_iff_EvensAboveTwoComposite
+  ⟨ targetClaim_proofI
+  , uniqueEvenPrimeClaim_holds
+  , existsUnique_even_prime
+  , targetClaim_iff_noOtherEvenPrime
+  , targetClaim_iff_evensAboveTwoNotPrime
+  , evensAboveTwoComposite_proofII
   , isEven_iff_mod_two
   , isPrime_iff_isIrreducible
   , isComposite_iff_proper_factors
-  , exists_even_prime
-  , exists_odd_prime
-  , zero_is_even
-  , one_not_even
-  , not_all_even_primes_are_three ⟩
+  , isEven_zero
+  , not_isEven_one
+  , exists_isPrime_isEven
+  , exists_isPrime_not_isEven
+  , not_forall_eq_three_of_isPrime_of_isEven ⟩
 
-#check TargetClaim
-#check (proofI_proves_TargetClaim : TargetClaim)
-#check (proofII_proves_TargetClaim : TargetClaim)
-#check spec_certificate
-
-end Spec
 end EvenPrime
