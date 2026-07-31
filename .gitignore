@@ -31,3 +31,11 @@
 # Debug files
 *.dSYM/
 *.su
+
+# LaTeX auxiliaries
+*.aux
+*.log
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
