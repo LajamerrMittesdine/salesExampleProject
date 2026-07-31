@@ -1,0 +1,30 @@
+MD5 Learning Experiment — Scientific Summary
+================================================
+
+Hypothesis: a neural net can learn MD5's structure well enough to
+generalize to unseen plaintexts and accelerate preimage search.
+
+Memorization probe (fit tiny train subset, test transfer):
+  subset exact match   : 1.0000
+  held-out exact match : 0.006667  (chance ≈ 0.001000)
+
+Forward model (plain → hash bits) on held-out test:
+  bit accuracy : 0.4992  (chance ≈ 0.50)
+  exact match  : 0.000000  (chance ≈ 0)
+  true avalanche   : 0.5031
+  model avalanche  : 0.2687
+
+Inverse model (hash → plain) :
+  train exact match : 0.3300
+  test  exact match : 0.006667  (chance ≈ 0.001000)
+  test  char acc    : 0.0889  (chance ≈ 0.1000)
+Search acceleration probe (rank of true plaintext):
+  mean rank        : 540.7
+  random mean rank : 500.5
+  top-1 hit rate   : 0.0067
+
+Verdict:
+  Nets can memorize small MD5 lookup tables, but held-out recovery stays near chance: no evidence of learning an invertible MD5 structure or a search-accelerating flaw.
+
+Caveat: this studies learnability under a tiny enumerable plaintext
+space. It does not claim cryptanalytic breaks of MD5 at large.

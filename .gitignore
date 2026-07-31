@@ -31,3 +31,13 @@
 # Debug files
 *.dSYM/
 *.su
+
+# Python / experiment artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+md5_experiment/artifacts/
+.pytest_cache/
+.mypy_cache/

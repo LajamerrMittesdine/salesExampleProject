@@ -1,0 +1,95 @@
+{
+  "config": {
+    "alphabet": "0123456789",
+    "plaintext_length": 3,
+    "train_frac": 0.7,
+    "val_frac": 0.15,
+    "test_frac": 0.15,
+    "seed": 42,
+    "hidden_dims": [
+      1024,
+      1024,
+      1024
+    ],
+    "dropout": 0.0,
+    "batch_size": 256,
+    "epochs": 60,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
+    "run_forward": true,
+    "run_inverse": true,
+    "output_dir": "md5_experiment/sample_results",
+    "space_size": 1000
+  },
+  "memorization": {
+    "n_memorize": 64,
+    "epochs": 200,
+    "memorized_subset_exact_match": 1.0,
+    "held_out_exact_match": 0.006666666828095913,
+    "held_out_char_accuracy": 0.11999999731779099,
+    "random_exact_match": 0.001,
+    "interpretation": "High subset exact_match + near-chance held-out means the architecture can store MD5 pairs as a lookup table, but that storage does not reveal a general inverse of MD5."
+  },
+  "forward": {
+    "train": {
+      "loss": 0.667723868233817,
+      "bit_accuracy": 0.5923325892857143,
+      "exact_match": 0.0
+    },
+    "val": {
+      "loss": 0.7095848592122396,
+      "bit_accuracy": 0.5008333333333334,
+      "exact_match": 0.0
+    },
+    "test": {
+      "loss": 0.7093738301595052,
+      "bit_accuracy": 0.49916666666666665,
+      "exact_match": 0.0
+    },
+    "baselines": {
+      "random_bit_accuracy": 0.5,
+      "note": "MD5 bits on constrained plaintexts are near-balanced; ~0.5 bit accuracy is chance. Exact digest match by chance is ~2^-128."
+    }
+  },
+  "avalanche": {
+    "n_samples": 200,
+    "true_mean_bit_flip_fraction": 0.503125,
+    "pred_mean_bit_flip_fraction": 0.2687109375,
+    "true_std": 0.04155339420928813,
+    "pred_std": 0.060343142616538,
+    "ideal_avalanche": 0.5,
+    "interpretation": "MD5's avalanche is ~0.5. If the model predicts far less, it has not learned the diffusion structure of MD5."
+  },
+  "inverse": {
+    "train": {
+      "loss": 1.0309769403366815,
+      "char_accuracy": 0.7038095238095238,
+      "exact_match": 0.33
+    },
+    "val": {
+      "loss": 3.214841037326389,
+      "char_accuracy": 0.1,
+      "exact_match": 0.0
+    },
+    "test": {
+      "loss": 3.2203458658854167,
+      "char_accuracy": 0.08888888888888889,
+      "exact_match": 0.006666666666666667
+    },
+    "baselines": {
+      "random_char_accuracy": 0.1,
+      "random_exact_match": 0.001,
+      "note": "Generalization means test exact_match >> random_exact_match. High train / near-chance test implies memorization, not learning MD5."
+    }
+  },
+  "search": {
+    "n_targets": 150,
+    "space_size": 1000,
+    "mean_rank": 540.7333333333333,
+    "median_rank": 565.5,
+    "expected_random_mean_rank": 500.5,
+    "top1_hit_rate": 0.006666666666666667,
+    "top10_hit_rate": 0.013333333333333334,
+    "interpretation": "Ranks near random mean \u21d2 no useful learned preimage prior. Mean rank << random \u21d2 model accelerates search within this space."
+  }
+}
