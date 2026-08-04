@@ -1,0 +1,14 @@
+[project]
+name = "kimi-k3-ref"
+version = "0.1.0"
+description = "Float32 educational reference core for Kimi K3 algorithms"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

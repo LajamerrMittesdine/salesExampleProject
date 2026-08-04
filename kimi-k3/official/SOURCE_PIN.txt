@@ -1,0 +1,20 @@
+# Source pins for vendored Kimi K3 investigation materials
+# Fetched: 2026-07-28
+
+huggingface.co/moonshotai/Kimi-K3
+  Files: modeling_*.py, configuration_kimi_k3.py, encoding_k3.py, tokenization_kimi.py,
+         kimi_k3_processor.py, kimi_k3_vision_processing.py, media_utils.py, config.json, ...
+  Note: custom_code revision as resolved from Hugging Face main on fetch date.
+
+github.com/MoonshotAI/Kimi-K3
+  Artifact: k3_tech_report.pdf, LICENSE, README.md
+
+github.com/MoonshotAI/FlashKDA
+  Files: tests/torch_ref.py, README.md
+
+github.com/fla-org/flash-linear-attention
+  Files: fla/ops/kda/naive.py, fla/ops/kda/gate.py, fla/ops/kda/__init__.py
+  Note: vendored under official/fla_kda/ for offline reading.
+
+github.com/MoonshotAI/MoonEP
+  Files: README.md (API overview; full CUDA stack not vendored)
